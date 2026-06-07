@@ -20,12 +20,11 @@ export async function POST(req: NextRequest) {
     }
 
     const config = STYLES[style] || STYLES.pixel;
-    const output = await replicate.run("stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b", {
+
+    const output = await replicate.run("black-forest-labs/flux-schnell", {
       input: {
         prompt: config.prefix + prompt,
-        negative_prompt: config.negative,
-        width: 512,
-        height: 512,
+        go_fast: true,
         num_outputs: 1,
       },
     });
