@@ -21,10 +21,12 @@ export async function POST(req: NextRequest) {
 
     const config = STYLES[style] || STYLES.pixel;
 
-    const output = await replicate.run("black-forest-labs/flux-schnell", {
+    const output = await replicate.run("stability-ai/stable-diffusion:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4", {
       input: {
         prompt: config.prefix + prompt,
-        go_fast: true,
+        negative_prompt: config.negative,
+        width: 512,
+        height: 512,
         num_outputs: 1,
       },
     });
