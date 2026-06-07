@@ -17,12 +17,17 @@ export async function POST(req: NextRequest) {
     const prefix = stylePrefix[style] || "";
     let fullPrompt = prefix + prompt;
 
-    // 透明背景模式（目前用白色背景 + 提示词优化，后续可接入真正去背景API）
     if (transparent) {
-      fullPrompt = fullPrompt.replace("white background", "solid white background, isolated, product photo style, no shadow");
+      fullPrompt = fullPrompt.replace("white background", "solid white background, isolated, product photo, no shadow");
     }
 
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=512&height=512&nologo=true`;
+    // 用多个备用域名
+    const domains = [
+      "https://image.pollinations.ai",
+      "https://pollinations.ai/p",
+    ];
+
+    const url = `${domains[0]}/prompt/${encodeURIComponent(fullPrompt)}?width=512&height=512&nologo=true&seed=${Date.now()}`;
 
     return NextResponse.json({ imageUrl: url });
   } catch (e: any) {
