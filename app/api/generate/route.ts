@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const HF_TOKEN = process.env.HUGGINGFACE_API_TOKEN || "";
+
 export async function POST(req: NextRequest) {
   try {
     const { prompt, style, transparent } = await req.json();
@@ -18,18 +20,34 @@ export async function POST(req: NextRequest) {
     let fullPrompt = prefix + prompt;
 
     if (transparent) {
-      fullPrompt = fullPrompt.replace("white background", "solid white background, isolated, product photo, no shadow");
+      fullPrompt += ", solid white background, isolated, no shadow";
     }
 
-    // 用多个备用域名
-    const domains = [
-      "https://image.pollinations.ai",
-      "https://pollinations.ai/p",
-    ];
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${HF_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inputs: fullPrompt,
+          parameters: { width: 512, height: 512 },
+        }),
+      }
+    );
 
-    const url = `${domains[0]}/prompt/${encodeURIComponent(fullPrompt)}?width=512&height=512&nologo=true&seed=${Date.now()}`;
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText.slice(0, 200));
+    }
 
-    return NextResponse.json({ imageUrl: url });
+    const buffer = await response.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+    const imageUrl = `data:image/png;base64,${base64}`;
+
+    return NextResponse.json({ imageUrl });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
